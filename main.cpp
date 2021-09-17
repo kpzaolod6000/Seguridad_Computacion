@@ -34,25 +34,24 @@ int main ()
         //if (c == 195 || c == 169) c = 101;
         lexema[i++]=c;
         
-        cg = c;//entra con 2digitos
-        for (map<string,string>::iterator it=mymap.begin(); it!=mymap.end(); ++it){
+        cout<<c<<" ";
+        // cg = c;//entra con 2digitos
+        // for (map<string,string>::iterator it=mymap.begin(); it!=mymap.end(); ++it){
             
-            if( cg == it->first){
-                cout<<it->second << '\n';
-            }
-            //cout <<  << " => " << 
-        }
+        //     if( cg == it->first){
+        //         cout<<it->second << '\n';
+        //     }
+        //     //cout <<  << " => " << 
+        // }
         
         if (c == '\n') n++;
 
         } while (c != EOF);
 
         lexema[i]=0;
-        fwrite (lexema , sizeof(char), sizeof(lexema), fw);
-        fclose (f);
-        
-        
-        printf ("The file contains %d salto de linea($) y total de caracteres %d.\n",n,i);
+        //fwrite (lexema , sizeof(char), sizeof(lexema), fw);
+        //fclose (f);        
+        //printf ("The file contains %d salto de linea($) y total de caracteres %d.\n",n,i);
   }
   return 0;
 }
