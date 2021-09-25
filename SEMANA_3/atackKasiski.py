@@ -152,20 +152,20 @@ def mcd_n(n):
             resultado = mcd(resultado, n)
     return math.fabs(resultado)
    
-def findLong(dicc,diccPosition):
+def findLongMCD(dicc,diccPosition):
 
     listLong = []
     mcd = 0
     for first in dicc:
         if (dicc[first] > 1):
-            print(first," -> ", dicc[first])
-            print(first," -> ", diccPosition[first])
+            print(first," -> ", dicc[first], ": index -> ",  diccPosition[first] , ": distancias -> ( ", end=' ')
             
             for x in range(len(diccPosition[first])-1):
                 value = diccPosition[first][x+1] - diccPosition[first][x] 
                 print(value, end=' ')
                 listLong.append(value)
-            print()
+            print(')')
+    print("\nLongitud: L = mcd(",listLong,") = ",end=' ')
     mcd = mcd_n(listLong)
     # for x, y in dicc.items():
     #     print(x, y)
@@ -182,13 +182,14 @@ def setSubCryptograms(data,L):
         subCrypto[sub] = subC
     
     #print
-    for x, y in subCrypto.items():
-        print(x, y)
+    # for x, y in subCrypto.items():
+    #     print(x, y)
     return subCrypto
 
-def frecuencySubCrypto(subCrypto):
-    alphabet = listAlphabet(27)
+def frecuencySubCrypto(subCrypto,mod_):
+    alphabet = listAlphabet(mod_)
     
+    freqLetterSub = []
     for x, y in subCrypto.items():
         freqAlph = {}
         for item in alphabet:
@@ -199,23 +200,110 @@ def frecuencySubCrypto(subCrypto):
             # else:
             #     freqAlph[item] = 0
         print(x, y)
+        # for m, n in freqAlph.items():
+        #     print(m, end=' ')
+        # print()
+        sub = []
         for m, n in freqAlph.items():
-            print(m, end=' ')
+            sub.append(n)
+            # print(n, end=' ')
         print()
-        for m, n in freqAlph.items():
-            print(n, end=' ')
-        print()
+        freqLetterSub.append(sub)
 
 
-def atackKasiski(data,long_key): 
-    dicc,diccPosition = findTrigrams(data,long_key)
-    L = int(findLong(dicc,diccPosition)) # longitud posible clave
-    subCrypto = setSubCryptograms(data,L)
-    frecuencySubCrypto(subCrypto)
+    return freqLetterSub
 
-    print("Longitud la supuesta clave: ", L)
-#================================================================================================================================
             
+def getKey(freqAlph,mod_):
+    
+    alphabet = listAlphabet(mod_)
+    rule = "AEO"
+    idxRule = [] 
+    for i in rule:
+        idxRule.append(alphabet.index(i))
+
+    # for i in idxRule:
+    #     print(i)
+    keyResult = []
+    for m in range(len(freqAlph)):
+        triAlphTarget =  rule
+        freqAlphTarget = idxRule.copy()
+        max_ = 0
+        for n in range(len(freqAlph[m])):
+            triAlph_ = []
+            freqAlph_ = []
+            for nex in idxRule:
+                
+                next_ = n + nex
+                if next_ > len(alphabet)-1:
+                    next_ = next_ - (len(alphabet)-1) 
+                    next_ = next_-1 #posicion del array
+                
+                if freqAlph[m][next_] >=2 :
+                    triAlph_.append(alphabet[next_])
+                    freqAlph_.append(freqAlph[m][next_])
+                else:
+                    break
+            if(len(triAlph_) == 3):
+                Sum = sum(freqAlph_)
+                if Sum > max_:
+                    max_ = Sum
+                    triAlphTarget = triAlph_
+                    freqAlphTarget = freqAlph_.copy()
+        
+        for k in triAlphTarget:
+            print(k,end='')
+        
+        print(end='( ')
+        for l in freqAlphTarget:
+            print(l,end=' ')
+        print(end=')')
+
+        keyResult.append(triAlphTarget[0])
+
+            # print(freqAlph[m][n],end=' ')
+        print()
+    return keyResult
+
+
+def atackKasiski(data,long_key,mod_): 
+    print("\nPOLIGRAMAS FRECUENTES\n")
+    dicc,diccPosition = findTrigrams(data,long_key)
+    L = int(findLongMCD(dicc,diccPosition)) # longitud posible clave
+
+    print(L,"\n")
+    print("\nSUBCRIPTOGRAMAS\n")
+    subCrypto = setSubCryptograms(data,L)
+    
+    
+    freqAlph = frecuencySubCrypto(subCrypto,mod_)
+    print("\nDiagrama de Frecuencia de los criptogramas\n")
+    
+    alphabet = listAlphabet(mod_)
+    
+    print("   ",end=' ')
+    for abc in alphabet:
+        print(abc,end='  ')
+    print()
+    for m in range(len(freqAlph)):
+        print('C'+ str(m),end=': ')
+        for n in range(len(freqAlph[m])):
+            print(freqAlph[m][n],end='  ')
+        print()
+    print()
+
+    print("\nPosible clave: ")
+    key_ = getKey(freqAlph,mod_)
+    print("\n",key_)
+    print("CLAVE: ","".join(key_))
+    
+    #Decriptions
+    print("\nMensaje Descifrado: \n")
+    msmDecrypt = getDecryption(data,data,key_,mod_)# data pos 2 = texto encriptado
+    print()
+    print("".join(msmDecrypt))
+    
+#================================================================================================================================
 
 
 def main():
@@ -223,20 +311,22 @@ def main():
     myfile = open('Criptoanalizar_19.txt', encoding='utf-8')
     data = myfile.read()
     data = list(data)
-    key_ = "MAR"
+    myfile.close()
+    # key_ = "MAR"
     mod_ = 27 # ESCOJER MOD
-    msmEncrypt = getEncrypt(data,key_,mod_)
-    print("".join(msmEncrypt))
-    msmDecrypt = getDecryption(data,msmEncrypt,key_,mod_)
-    print("".join(msmDecrypt))
     
-    with open('result.txt', 'w') as f:
-        f.write("".join(msmEncrypt))
+    # msmEncrypt = getEncrypt(data,key_,mod_)
+    # print("".join(msmEncrypt))
+    # msmDecrypt = getDecryption(data,msmEncrypt,key_,mod_)
+    # print("".join(msmDecrypt))
+    
+    # with open('result.txt', 'w') as f:
+    #     f.write("".join(msmEncrypt))
         
-    print("Cantidad de Frecuencias")
-    frecuency = Letterfrecuency(msmEncrypt,mod_)
-    for x in frecuency:
-        print(x," -> ",frecuency[x])
+    # print("Cantidad de Frecuencias")
+    # frecuency = Letterfrecuency(msmEncrypt,mod_)
+    # for x in frecuency:
+    #     print(x," -> ",frecuency[x])
 
     # LECTURA TEXTO
     #  Read
@@ -247,41 +337,43 @@ def main():
     
     # mod_ = 27 # ESCOJER MOD
 
-    msmDecrypt = getDecryption(data,data,key_,mod_)
-    print("".join(msmDecrypt))
+    # Decriptions
+    # msmDecrypt = getDecryption(data,data,key_,mod_)
+    # print("".join(msmDecrypt))
     
     # #establece longitud de los bigramas,trigramas o etc
     long_key = 4
-    atackKasiski(data,long_key)
+    atackKasiski(data,long_key,mod_)
+
+
 
     #cuestionario final ejercicio 4
-    data = "IZLQOD"
-    data = list(data)
-    key_ = "SOL"
-    mod_ = 27 # ESCOJER MOD
+    # data = "IZLQOD"
+    # data = list(data)
+    # key_ = "SOL"
+    # mod_ = 27 # ESCOJER MOD
 
-    msmDecrypt = getDecryption(data,data,key_,mod_)
-    print("".join(msmDecrypt))
+    # msmDecrypt = getDecryption(data,data,key_,mod_)
+    # freqAlph = print("".join(msmDecrypt))
+
     
+
 
     #getAutoclave
 
-    print()
-    data = "HABIAUNAVEZ"
-    data = list(data)
-    key_ = "CIRCO"
-    mod_ = 27
-    autokey = getAutoclave(data,key_)
-    print(autokey)
+    # print()
+    # data = "HABIAUNAVEZ"
+    # data = list(data)
+    # key_ = "CIRCO"
+    # mod_ = 27
+    # autokey = getAutoclave(data,key_)
+    # print(autokey)
 
 
     # print(data)
-    myfile.close()
+   
 
 if __name__ == "__main__":
     main()
-# print(listAlphabet(191))
-
-# print(subCrypto)
 
 
